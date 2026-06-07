@@ -1,0 +1,54 @@
+[gd_scene load_steps=8 format=3 uid="uid://playerstarter"]
+
+[ext_resource type="Script" path="res://Player/player.gd" id="1_player"]
+[ext_resource type="Script" path="res://Systems/state_machine.gd" id="2_state"]
+[ext_resource type="Script" path="res://Systems/health_component.gd" id="3_health"]
+[ext_resource type="Script" path="res://Systems/damage_component.gd" id="4_damage"]
+[ext_resource type="Texture2D" path="res://Assets/player_placeholder.svg" id="5_texture"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player_body"]
+size = Vector2(18, 34)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
+size = Vector2(30, 18)
+
+[node name="Player" type="CharacterBody2D" groups=["player"]]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_player")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("5_texture")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_player_body")
+
+[node name="StateMachine" type="Node" parent="."]
+script = ExtResource("2_state")
+initial_state = &"idle"
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("3_health")
+max_health = 5
+
+[node name="FacingPivot" type="Node2D" parent="."]
+
+[node name="AttackHitbox" type="Area2D" parent="FacingPivot"]
+position = Vector2(25, 0)
+collision_layer = 8
+collision_mask = 4
+script = ExtResource("4_damage")
+damage = 1
+knockback_force = Vector2(260, -120)
+enabled_on_ready = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FacingPivot/AttackHitbox"]
+shape = SubResource("RectangleShape2D_attack")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position_smoothing_enabled = true
+position_smoothing_speed = 7.0
+limit_left = -200
+limit_top = -200
+limit_right = 2200
+limit_bottom = 900
