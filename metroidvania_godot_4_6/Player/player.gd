@@ -29,7 +29,9 @@ extends CharacterBody2D
 
 @export_group("Wall")
 @export var wall_slide_speed: float = 95.0
-@export var wall_jump_velocity: Vector2 = Vector2(330.0, -390.0)
+@export var wall_grab_fall_speed: float = 0.0
+@export var wall_jump_velocity: Vector2 = Vector2(170.0, -520.0)
+@export var wall_jump_control_lock_time: float = 0.14
 @export var wall_stick_time: float = 0.08
 
 @export_group("Combat")
@@ -42,15 +44,21 @@ extends CharacterBody2D
 
 @onready var state_machine: StateMachine = $StateMachine
 @onready var health_component: HealthComponent = $HealthComponent
-@onready var attack_hitbox: DamageComponent = $FacingPivot/AttackHitbox
+@onready var forward_attack_hitbox: DamageComponent = $FacingPivot/ForwardAttackHitbox
+@onready var up_attack_hitbox: DamageComponent = $FacingPivot/UpAttackHitbox
+@onready var down_attack_hitbox: DamageComponent = $FacingPivot/DownAttackHitbox
+@onready var attack_effect: Sprite2D = $FacingPivot/AttackEffect
+@onready var dash_effect: Sprite2D = $FacingPivot/DashEffect
 @onready var facing_pivot: Node2D = $FacingPivot
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var camera: Camera2D = $Camera2D
 
 var input_direction: float = 0.0
+var vertical_input_direction: float = 0.0
 var facing_direction: int = 1
 var air_jumps_left: int
 var is_invincible: bool = false
+var current_attack_direction: StringName = &"forward"
 
 var _jump_buffer_timer: float = 0.0
 var _coyote_timer: float = 0.0
@@ -59,13 +67,19 @@ var _dash_cooldown_timer: float = 0.0
 var _attack_timer: float = 0.0
 var _attack_cooldown_timer: float = 0.0
 var _hurt_timer: float = 0.0
+var _wall_jump_control_lock_timer: float = 0.0
 var _wall_stick_timer: float = 0.0
+var _attack_effect_tween: Tween
+var _dash_effect_tween: Tween
 
 
 func _ready() -> void:
 	air_jumps_left = max_air_jumps
-	attack_hitbox.deactivate()
+	_deactivate_attack_hitboxes()
+	attack_effect.visible = false
+	dash_effect.visible = false
 	camera.make_current()
+	down_attack_hitbox.hit_target.connect(_on_down_attack_hit_target)
 	health_component.damaged.connect(_on_damaged)
 	health_component.died.connect(_on_died)
 
@@ -97,9 +111,10 @@ func _physics_process(delta: float) -> void:
 # -----------------------------
 func _read_input() -> void:
 	input_direction = Input.get_axis("move_left", "move_right")
+	vertical_input_direction = Input.get_axis("move_up", "move_down")
 
 	if not is_zero_approx(input_direction):
-		facing_direction = sign(input_direction)
+		facing_direction = int(sign(input_direction))
 
 	if Input.is_action_just_pressed("jump"):
 		_jump_buffer_timer = jump_buffer_time
@@ -115,15 +130,17 @@ func _process_locomotion(delta: float) -> void:
 	_apply_horizontal_movement(delta)
 	_apply_gravity(delta)
 
-	if _can_wall_slide():
-		velocity.y = min(velocity.y, wall_slide_speed)
-		state_machine.transition_to(&"wall_slide")
+	if _can_wall_grab():
+		_process_wall_grab()
 
 
 func _apply_horizontal_movement(delta: float) -> void:
 	var target_speed: float = input_direction * run_speed
 	var acceleration: float = ground_acceleration if is_on_floor() else air_acceleration
 	var friction: float = ground_friction if is_on_floor() else air_friction
+
+	if _wall_jump_control_lock_timer > 0.0:
+		return
 
 	if is_zero_approx(input_direction):
 		velocity.x = move_toward(velocity.x, 0.0, friction * delta)
@@ -173,7 +190,8 @@ func _start_wall_jump() -> void:
 
 	velocity.x = wall_jump_velocity.x * wall_direction
 	velocity.y = wall_jump_velocity.y
-	facing_direction = sign(wall_direction)
+	facing_direction = int(sign(wall_direction))
+	_wall_jump_control_lock_timer = wall_jump_control_lock_time
 	_wall_stick_timer = wall_stick_time
 	_jump_buffer_timer = 0.0
 	state_machine.transition_to(&"jump")
@@ -185,6 +203,7 @@ func _process_dash_request() -> void:
 		_dash_timer = dash_duration
 		_dash_cooldown_timer = dash_cooldown
 		velocity = Vector2(dash_speed * facing_direction, 0.0)
+		_play_dash_effect()
 
 
 func _process_dash(delta: float) -> void:
@@ -196,11 +215,34 @@ func _process_dash(delta: float) -> void:
 
 
 func _can_wall_slide() -> bool:
-	return not is_on_floor() and is_on_wall_only() and velocity.y > 0.0 and not is_zero_approx(input_direction)
+	return _can_wall_grab() and vertical_input_direction > 0.2
+
+
+func _can_wall_grab() -> bool:
+	return not is_on_floor() and is_on_wall_only() and _is_pressing_into_wall()
 
 
 func _can_wall_jump() -> bool:
-	return is_on_wall_only() or state_machine.is_state(&"wall_slide")
+	return is_on_wall_only() or state_machine.is_state(&"wall_grab") or state_machine.is_state(&"wall_slide")
+
+
+func _process_wall_grab() -> void:
+	velocity.x = 0.0
+
+	if _can_wall_slide():
+		velocity.y = wall_slide_speed
+		state_machine.transition_to(&"wall_slide")
+	else:
+		velocity.y = min(velocity.y, wall_grab_fall_speed)
+		state_machine.transition_to(&"wall_grab")
+
+
+func _is_pressing_into_wall() -> bool:
+	var wall_normal: Vector2 = get_wall_normal()
+	if wall_normal == Vector2.ZERO:
+		return false
+
+	return sign(input_direction) == -sign(wall_normal.x)
 
 
 # -----------------------------
@@ -210,13 +252,100 @@ func _process_attack_request() -> void:
 	if Input.is_action_just_pressed("attack") and _attack_cooldown_timer <= 0.0:
 		_attack_timer = attack_duration
 		_attack_cooldown_timer = attack_cooldown
-		attack_hitbox.activate()
+		current_attack_direction = _get_attack_direction()
+		_activate_attack_hitbox(current_attack_direction)
+		_play_attack_effect(current_attack_direction)
 		state_machine.transition_to(&"attack")
 
 
 func _update_attack() -> void:
 	if _attack_timer <= 0.0:
-		attack_hitbox.deactivate()
+		_deactivate_attack_hitboxes()
+
+
+func _get_attack_direction() -> StringName:
+	if vertical_input_direction < -0.2:
+		return &"up"
+	if vertical_input_direction > 0.2:
+		return &"down"
+	return &"forward"
+
+
+func _activate_attack_hitbox(attack_direction: StringName) -> void:
+	_deactivate_attack_hitboxes()
+
+	match attack_direction:
+		&"up":
+			up_attack_hitbox.activate()
+		&"down":
+			down_attack_hitbox.activate()
+		_:
+			forward_attack_hitbox.activate()
+
+
+func _deactivate_attack_hitboxes() -> void:
+	forward_attack_hitbox.deactivate()
+	up_attack_hitbox.deactivate()
+	down_attack_hitbox.deactivate()
+
+
+func _play_attack_effect(attack_direction: StringName) -> void:
+	if _attack_effect_tween != null:
+		_attack_effect_tween.kill()
+
+	attack_effect.visible = true
+	attack_effect.position = Vector2(30.0, -2.0)
+	attack_effect.rotation_degrees = -38.0
+	attack_effect.scale = Vector2(0.82, 0.82)
+	attack_effect.modulate = Color(1.0, 1.0, 1.0, 1.0)
+
+	var target_rotation: float = 34.0
+	match attack_direction:
+		&"up":
+			attack_effect.position = Vector2(0.0, -32.0)
+			attack_effect.rotation_degrees = -125.0
+			target_rotation = -55.0
+		&"down":
+			attack_effect.position = Vector2(0.0, 32.0)
+			attack_effect.rotation_degrees = 55.0
+			target_rotation = 125.0
+
+	_attack_effect_tween = create_tween()
+	_attack_effect_tween.set_parallel(true)
+	_attack_effect_tween.tween_property(attack_effect, "rotation_degrees", target_rotation, attack_duration)
+	_attack_effect_tween.tween_property(attack_effect, "scale", Vector2(1.12, 1.12), attack_duration)
+	_attack_effect_tween.tween_property(attack_effect, "modulate:a", 0.0, attack_duration)
+	_attack_effect_tween.finished.connect(_hide_attack_effect)
+
+
+func _hide_attack_effect() -> void:
+	attack_effect.visible = false
+	_attack_effect_tween = null
+
+
+func _play_dash_effect() -> void:
+	if _dash_effect_tween != null:
+		_dash_effect_tween.kill()
+
+	dash_effect.visible = true
+	dash_effect.modulate = Color(1.0, 1.0, 1.0, 0.8)
+	dash_effect.scale = Vector2(0.8, 0.8)
+
+	_dash_effect_tween = create_tween()
+	_dash_effect_tween.set_parallel(true)
+	_dash_effect_tween.tween_property(dash_effect, "scale", Vector2(1.25, 1.25), dash_duration)
+	_dash_effect_tween.tween_property(dash_effect, "modulate:a", 0.0, dash_duration)
+	_dash_effect_tween.finished.connect(_hide_dash_effect)
+
+
+func _hide_dash_effect() -> void:
+	dash_effect.visible = false
+	_dash_effect_tween = null
+
+
+func _on_down_attack_hit_target(_target: Node) -> void:
+	if not is_on_floor():
+		velocity.y = jump_velocity * 0.72
 
 
 # -----------------------------
@@ -259,7 +388,7 @@ func _start_invincibility() -> void:
 
 func _on_died() -> void:
 	set_physics_process(false)
-	attack_hitbox.deactivate()
+	_deactivate_attack_hitboxes()
 	sprite.modulate = Color(1.0, 0.25, 0.25)
 
 
@@ -272,6 +401,8 @@ func apply_knockback(knockback: Vector2) -> void:
 # -----------------------------
 func _update_locomotion_state() -> void:
 	if state_machine.is_state(&"attack") and _attack_timer > 0.0:
+		return
+	if _can_wall_grab():
 		return
 
 	if is_on_floor():
@@ -299,6 +430,7 @@ func _update_timers(delta: float) -> void:
 	_dash_cooldown_timer = max(_dash_cooldown_timer - delta, 0.0)
 	_attack_cooldown_timer = max(_attack_cooldown_timer - delta, 0.0)
 	_attack_timer = max(_attack_timer - delta, 0.0)
+	_wall_jump_control_lock_timer = max(_wall_jump_control_lock_timer - delta, 0.0)
 	_wall_stick_timer = max(_wall_stick_timer - delta, 0.0)
 	_update_attack()
 

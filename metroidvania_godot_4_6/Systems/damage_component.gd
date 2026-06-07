@@ -1,6 +1,8 @@
 class_name DamageComponent
 extends Area2D
 
+signal hit_target(target: Node)
+
 ## Area-based damage source.
 ## Put this on attack hitboxes, enemy touch zones, spikes, or projectiles.
 
@@ -47,6 +49,7 @@ func _try_damage_target(target: Node) -> void:
 
 	_hit_bodies.append(target)
 	health.take_damage(damage, owner)
+	hit_target.emit(target)
 
 	if target.has_method("apply_knockback"):
 		var target_node: Node2D = target as Node2D

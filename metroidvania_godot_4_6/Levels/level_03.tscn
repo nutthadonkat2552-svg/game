@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://dys6smneh5wvl"]
+
+[ext_resource type="Script" uid="uid://eif4hic6tboj" path="res://Levels/level_scene.gd" id="1_scene"]
+[ext_resource type="PackedScene" uid="uid://bsr5aw8cw1ng4" path="res://Levels/platform.tscn" id="2_platform"]
+
+[sub_resource type="RectangleShape2D" id="GoalShape"]
+size = Vector2(46, 80)
+
+[node name="Level03" type="Node2D" unique_id=1596543267]
+script = ExtResource("1_scene")
+level_number = 3
+level_title = "Double Jump"
+level_tip = "Press jump again in the air to double jump across wider gaps."
+
+[node name="World" type="Node2D" parent="." unique_id=2130661791]
+
+[node name="Start" parent="World" unique_id=623203258 instance=ExtResource("2_platform")]
+position = Vector2(220, 360)
+scale = Vector2(6.875, 0.625)
+
+[node name="IslandA" parent="World" unique_id=2077532139 instance=ExtResource("2_platform")]
+position = Vector2(696, 288)
+scale = Vector2(2.5, 0.375)
+
+[node name="IslandB" parent="World" unique_id=1209890914 instance=ExtResource("2_platform")]
+position = Vector2(999.99994, 224)
+scale = Vector2(2.5, 0.375)
+
+[node name="GoalPlatform" parent="World" unique_id=601090465 instance=ExtResource("2_platform")]
+position = Vector2(1320, 144.00002)
+scale = Vector2(4.0625, 0.375)
+
+[node name="PlayerSpawn" type="Marker2D" parent="." unique_id=996303125]
+position = Vector2(80, 320)
+
+[node name="EnemySpawns" type="Node2D" parent="." unique_id=1870008906]
+
+[node name="Goal" type="Area2D" parent="." unique_id=1286974843]
+position = Vector2(1424, 88)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Goal" unique_id=642837648]
+shape = SubResource("GoalShape")
+
+[node name="GoalMarker" type="Polygon2D" parent="Goal" unique_id=826362608]
+color = Color(0.95, 0.86, 0.25, 0.72)
+polygon = PackedVector2Array(-23, -40, 23, -40, 23, 40, -23, 40)

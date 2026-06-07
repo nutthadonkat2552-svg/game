@@ -1,0 +1,47 @@
+[gd_scene format=3 uid="uid://dys6srneh5wvl"]
+
+[ext_resource type="Script" uid="uid://eif4hic6tboj" path="res://Levels/level_scene.gd" id="1_scene"]
+[ext_resource type="PackedScene" uid="uid://bsr5aw8cw1ng4" path="res://Levels/platform.tscn" id="2_platform"]
+
+[sub_resource type="RectangleShape2D" id="GoalShape"]
+size = Vector2(46, 80)
+
+[node name="Level08" type="Node2D" unique_id=343208794]
+script = ExtResource("1_scene")
+level_number = 8
+level_title = "Pogo Bridge"
+level_tip = "Down slash an enemy while airborne to pogo upward across the gap."
+
+[node name="World" type="Node2D" parent="." unique_id=1599081991]
+
+[node name="Start" parent="World" unique_id=130883127 instance=ExtResource("2_platform")]
+position = Vector2(230, 360)
+scale = Vector2(7.1875, 0.625)
+
+[node name="EnemyBridgeA" parent="World" unique_id=1585931744 instance=ExtResource("2_platform")]
+position = Vector2(684, 357)
+scale = Vector2(0.35491985, 0.354591)
+
+[node name="Landing" parent="World" unique_id=119221118 instance=ExtResource("2_platform")]
+position = Vector2(1002, 353)
+scale = Vector2(6.5625, 0.625)
+
+[node name="PlayerSpawn" type="Marker2D" parent="." unique_id=957323976]
+position = Vector2(80, 320)
+
+[node name="EnemySpawns" type="Node2D" parent="." unique_id=1352302901]
+
+[node name="Enemy01" type="Marker2D" parent="EnemySpawns" unique_id=1445325950]
+position = Vector2(684, 317)
+
+[node name="Goal" type="Area2D" parent="." unique_id=1750116017]
+position = Vector2(1157, 286)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Goal" unique_id=1552324637]
+shape = SubResource("GoalShape")
+
+[node name="GoalMarker" type="Polygon2D" parent="Goal" unique_id=78389331]
+color = Color(0.95, 0.86, 0.25, 0.72)
+polygon = PackedVector2Array(-23, -40, 23, -40, 23, 40, -23, 40)

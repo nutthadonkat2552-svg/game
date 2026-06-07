@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://level01starter"]
+[gd_scene load_steps=4 format=3 uid="uid://level06starter"]
 
 [ext_resource type="Script" path="res://Levels/level_scene.gd" id="1_scene"]
 [ext_resource type="PackedScene" path="res://Levels/platform.tscn" id="2_platform"]
@@ -6,29 +6,36 @@
 [sub_resource type="RectangleShape2D" id="GoalShape"]
 size = Vector2(46, 80)
 
-[node name="Level01" type="Node2D"]
+[node name="Level06" type="Node2D"]
 script = ExtResource("1_scene")
-level_number = 1
-level_title = "First Steps"
-level_tip = "Move right, jump over the gap, then touch the yellow goal marker."
+level_number = 6
+level_title = "First Enemy"
+level_tip = "Press J or left mouse to attack. Watch the enemy attack timing."
 
 [node name="World" type="Node2D" parent="."]
 
-[node name="StartFloor" parent="World" instance=ExtResource("2_platform")]
-position = Vector2(260, 360)
-scale = Vector2(8.125, 0.625)
+[node name="Arena" parent="World" instance=ExtResource("2_platform")]
+position = Vector2(620, 360)
+scale = Vector2(18.4375, 0.625)
 
-[node name="GapLanding" parent="World" instance=ExtResource("2_platform")]
-position = Vector2(820, 360)
-scale = Vector2(7.8125, 0.625)
+[node name="LeftWall" parent="World" instance=ExtResource("2_platform")]
+position = Vector2(20, 250)
+scale = Vector2(0.625, 4.0625)
+
+[node name="RightWall" parent="World" instance=ExtResource("2_platform")]
+position = Vector2(1220, 250)
+scale = Vector2(0.625, 4.0625)
 
 [node name="PlayerSpawn" type="Marker2D" parent="."]
 position = Vector2(80, 320)
 
 [node name="EnemySpawns" type="Node2D" parent="."]
 
+[node name="Enemy01" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(650, 320)
+
 [node name="Goal" type="Area2D" parent="."]
-position = Vector2(1040, 292)
+position = Vector2(1180, 292)
 collision_layer = 0
 collision_mask = 2
 

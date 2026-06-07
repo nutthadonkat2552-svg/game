@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://dys6sqneh5wvl"]
+
+[ext_resource type="Script" uid="uid://eif4hic6tboj" path="res://Levels/level_scene.gd" id="1_scene"]
+[ext_resource type="PackedScene" uid="uid://bsr5aw8cw1ng4" path="res://Levels/platform.tscn" id="2_platform"]
+
+[sub_resource type="RectangleShape2D" id="GoalShape"]
+size = Vector2(46, 80)
+
+[node name="Level07" type="Node2D" unique_id=572480889]
+script = ExtResource("1_scene")
+level_number = 7
+level_title = "Slash Angles"
+level_tip = "Hold W and attack to slash up. Hold S and attack to slash down."
+
+[node name="World" type="Node2D" parent="." unique_id=1492662904]
+
+[node name="Floor" parent="World" unique_id=1287163357 instance=ExtResource("2_platform")]
+position = Vector2(420, 360)
+scale = Vector2(12.8125, 0.625)
+
+[node name="HighEnemy" parent="World" unique_id=261206559 instance=ExtResource("2_platform")]
+position = Vector2(998.00006, 274)
+scale = Vector2(3.4375, 0.375)
+
+[node name="GoalPlatform" parent="World" unique_id=444283627 instance=ExtResource("2_platform")]
+position = Vector2(1260, 205)
+scale = Vector2(3.4375, 0.375)
+
+[node name="PlayerSpawn" type="Marker2D" parent="." unique_id=983358483]
+position = Vector2(80, 320)
+
+[node name="EnemySpawns" type="Node2D" parent="." unique_id=1414500964]
+
+[node name="Enemy01" type="Marker2D" parent="EnemySpawns" unique_id=1327182613]
+position = Vector2(520, 320)
+
+[node name="Enemy02" type="Marker2D" parent="EnemySpawns" unique_id=443901535]
+position = Vector2(991, 225)
+
+[node name="Goal" type="Area2D" parent="." unique_id=1835516401]
+position = Vector2(1343, 148)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Goal" unique_id=331860687]
+shape = SubResource("GoalShape")
+
+[node name="GoalMarker" type="Polygon2D" parent="Goal" unique_id=1894581149]
+color = Color(0.95, 0.86, 0.25, 0.72)
+polygon = PackedVector2Array(-23, -40, 23, -40, 23, 40, -23, 40)

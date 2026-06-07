@@ -1,16 +1,24 @@
-[gd_scene load_steps=8 format=3 uid="uid://playerstarter"]
+[gd_scene load_steps=11 format=3 uid="uid://playerstarter"]
 
 [ext_resource type="Script" path="res://Player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://Systems/state_machine.gd" id="2_state"]
 [ext_resource type="Script" path="res://Systems/health_component.gd" id="3_health"]
 [ext_resource type="Script" path="res://Systems/damage_component.gd" id="4_damage"]
 [ext_resource type="Texture2D" path="res://Assets/player_placeholder.svg" id="5_texture"]
+[ext_resource type="Texture2D" path="res://Assets/slash_effect.svg" id="6_slash"]
+[ext_resource type="Texture2D" path="res://Assets/dash_effect.svg" id="7_dash"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player_body"]
 size = Vector2(18, 34)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
 size = Vector2(30, 18)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_attack_up"]
+size = Vector2(22, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_attack_down"]
+size = Vector2(24, 28)
 
 [node name="Player" type="CharacterBody2D" groups=["player"]]
 collision_layer = 2
@@ -33,7 +41,7 @@ max_health = 5
 
 [node name="FacingPivot" type="Node2D" parent="."]
 
-[node name="AttackHitbox" type="Area2D" parent="FacingPivot"]
+[node name="ForwardAttackHitbox" type="Area2D" parent="FacingPivot"]
 position = Vector2(25, 0)
 collision_layer = 8
 collision_mask = 4
@@ -42,8 +50,44 @@ damage = 1
 knockback_force = Vector2(260, -120)
 enabled_on_ready = false
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="FacingPivot/AttackHitbox"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FacingPivot/ForwardAttackHitbox"]
 shape = SubResource("RectangleShape2D_attack")
+
+[node name="UpAttackHitbox" type="Area2D" parent="FacingPivot"]
+position = Vector2(0, -28)
+collision_layer = 8
+collision_mask = 4
+script = ExtResource("4_damage")
+damage = 1
+knockback_force = Vector2(120, -260)
+enabled_on_ready = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FacingPivot/UpAttackHitbox"]
+shape = SubResource("RectangleShape2D_attack_up")
+
+[node name="DownAttackHitbox" type="Area2D" parent="FacingPivot"]
+position = Vector2(0, 28)
+collision_layer = 8
+collision_mask = 4
+script = ExtResource("4_damage")
+damage = 1
+knockback_force = Vector2(90, 180)
+enabled_on_ready = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FacingPivot/DownAttackHitbox"]
+shape = SubResource("RectangleShape2D_attack_down")
+
+[node name="AttackEffect" type="Sprite2D" parent="FacingPivot"]
+visible = false
+position = Vector2(30, -2)
+z_index = 5
+texture = ExtResource("6_slash")
+
+[node name="DashEffect" type="Sprite2D" parent="FacingPivot"]
+visible = false
+position = Vector2(-26, 2)
+z_index = 4
+texture = ExtResource("7_dash")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true

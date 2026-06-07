@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://dys6soneh5wvl"]
+
+[ext_resource type="Script" uid="uid://eif4hic6tboj" path="res://Levels/level_scene.gd" id="1_scene"]
+[ext_resource type="PackedScene" uid="uid://bsr5aw8cw1ng4" path="res://Levels/platform.tscn" id="2_platform"]
+
+[sub_resource type="RectangleShape2D" id="GoalShape"]
+size = Vector2(46, 80)
+
+[node name="Level05" type="Node2D" unique_id=193198199]
+script = ExtResource("1_scene")
+level_number = 5
+level_title = "Wall Work"
+level_tip = "Hold toward a wall to grab it. Hold down to slide. Jump to climb."
+camera_bottom = 820
+
+[node name="World" type="Node2D" parent="." unique_id=1709134895]
+
+[node name="Bottom" parent="World" unique_id=636941865 instance=ExtResource("2_platform")]
+position = Vector2(130, 173)
+scale = Vector2(3.9099994, 0.625)
+
+[node name="RightTower" parent="World" unique_id=1653654333 instance=ExtResource("2_platform")]
+position = Vector2(351, 364)
+scale = Vector2(0.6189456, 6.8431125)
+
+[node name="Bottom2" parent="World" unique_id=1518120462 instance=ExtResource("2_platform")]
+position = Vector2(155.00002, 558)
+scale = Vector2(2.95, 0.625)
+
+[node name="PlayerSpawn" type="Marker2D" parent="." unique_id=1297774542]
+position = Vector2(129, 124)
+
+[node name="EnemySpawns" type="Node2D" parent="." unique_id=1603570862]
+
+[node name="Goal" type="Area2D" parent="." unique_id=545512803]
+position = Vector2(94, 487)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Goal" unique_id=463175853]
+shape = SubResource("GoalShape")
+
+[node name="GoalMarker" type="Polygon2D" parent="Goal" unique_id=2057224619]
+color = Color(0.95, 0.86, 0.25, 0.72)
+polygon = PackedVector2Array(-23, -40, 23, -40, 23, 40, -23, 40)

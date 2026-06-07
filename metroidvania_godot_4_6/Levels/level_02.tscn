@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://dys6slneh5wvl"]
+
+[ext_resource type="Script" uid="uid://eif4hic6tboj" path="res://Levels/level_scene.gd" id="1_scene"]
+[ext_resource type="PackedScene" uid="uid://bsr5aw8cw1ng4" path="res://Levels/platform.tscn" id="2_platform"]
+
+[sub_resource type="RectangleShape2D" id="GoalShape"]
+size = Vector2(46, 80)
+
+[node name="Level02" type="Node2D" unique_id=1803519040]
+script = ExtResource("1_scene")
+level_number = 2
+level_title = "Jump Control"
+level_tip = "Tap jump for a short hop. Hold jump for a higher jump."
+
+[node name="World" type="Node2D" parent="." unique_id=1090642257]
+
+[node name="Floor" parent="World" unique_id=1461583971 instance=ExtResource("2_platform")]
+position = Vector2(280, 360)
+scale = Vector2(8.75, 0.625)
+
+[node name="LowHop" parent="World" unique_id=1873885538 instance=ExtResource("2_platform")]
+position = Vector2(672, 352)
+scale = Vector2(2.65625, 0.375)
+
+[node name="MidHop" parent="World" unique_id=1166002019 instance=ExtResource("2_platform")]
+position = Vector2(928, 352)
+scale = Vector2(2.65625, 0.375)
+
+[node name="HighHop" parent="World" unique_id=45025373 instance=ExtResource("2_platform")]
+position = Vector2(1200.0001, 352)
+scale = Vector2(3.4375, 0.375)
+
+[node name="PlayerSpawn" type="Marker2D" parent="." unique_id=1746025185]
+position = Vector2(80, 320)
+
+[node name="EnemySpawns" type="Node2D" parent="." unique_id=1031721064]
+
+[node name="Goal" type="Area2D" parent="." unique_id=1627018496]
+position = Vector2(1288, 296)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Goal" unique_id=1411510641]
+shape = SubResource("GoalShape")
+
+[node name="GoalMarker" type="Polygon2D" parent="Goal" unique_id=1221700347]
+color = Color(0.95, 0.86, 0.25, 0.72)
+polygon = PackedVector2Array(-23, -40, 23, -40, 23, 40, -23, 40)

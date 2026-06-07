@@ -1,0 +1,57 @@
+[gd_scene format=3 uid="uid://dys6ssneh5wvl"]
+
+[ext_resource type="Script" uid="uid://eif4hic6tboj" path="res://Levels/level_scene.gd" id="1_scene"]
+[ext_resource type="PackedScene" uid="uid://bsr5aw8cw1ng4" path="res://Levels/platform.tscn" id="2_platform"]
+
+[sub_resource type="RectangleShape2D" id="GoalShape"]
+size = Vector2(46, 80)
+
+[node name="Level09" type="Node2D" unique_id=609498707]
+script = ExtResource("1_scene")
+level_number = 9
+level_title = "Mixed Route"
+level_tip = "Chain run, jump, double jump, dash, and wall jump together."
+camera_right = 1600
+camera_bottom = 820
+
+[node name="World" type="Node2D" parent="." unique_id=1666063153]
+
+[node name="Start" parent="World" unique_id=1160208133 instance=ExtResource("2_platform")]
+position = Vector2(260, 490)
+scale = Vector2(8.125, 0.625)
+
+[node name="DashIsland" parent="World" unique_id=1423163704 instance=ExtResource("2_platform")]
+position = Vector2(922, 479)
+scale = Vector2(3.4375, 0.375)
+
+[node name="WallLeft" parent="World" unique_id=1447986214 instance=ExtResource("2_platform")]
+position = Vector2(1098, 371)
+scale = Vector2(0.625, 4.0625)
+
+[node name="WallRight" parent="World" unique_id=1021143660 instance=ExtResource("2_platform")]
+position = Vector2(1268, 311)
+scale = Vector2(0.625, 5.3125)
+
+[node name="GoalPlatform" parent="World" unique_id=454927179 instance=ExtResource("2_platform")]
+position = Vector2(1026, 116)
+scale = Vector2(4.0625, 0.375)
+
+[node name="PlayerSpawn" type="Marker2D" parent="." unique_id=1589839488]
+position = Vector2(80, 450)
+
+[node name="EnemySpawns" type="Node2D" parent="." unique_id=1583059202]
+
+[node name="Enemy01" type="Marker2D" parent="EnemySpawns" unique_id=1328077844]
+position = Vector2(920, 443)
+
+[node name="Goal" type="Area2D" parent="." unique_id=1083085320]
+position = Vector2(927, 57)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Goal" unique_id=1797102064]
+shape = SubResource("GoalShape")
+
+[node name="GoalMarker" type="Polygon2D" parent="Goal" unique_id=1628315949]
+color = Color(0.95, 0.86, 0.25, 0.72)
+polygon = PackedVector2Array(-23, -40, 23, -40, 23, 40, -23, 40)

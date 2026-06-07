@@ -31,14 +31,16 @@ initial_state = &"patrol"
 script = ExtResource("3_health")
 max_health = 3
 
-[node name="ContactDamage" type="Area2D" parent="."]
+[node name="AttackHitbox" type="Area2D" parent="."]
+position = Vector2(-22, 0)
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("4_damage")
 damage = 1
 knockback_force = Vector2(280, -150)
+enabled_on_ready = false
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ContactDamage"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
 shape = SubResource("RectangleShape2D_contact")
 
 [node name="WallCheck" type="RayCast2D" parent="."]

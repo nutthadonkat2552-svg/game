@@ -3,31 +3,44 @@ extends CharacterBody2D
 
 ## Simple patrol/chase enemy.
 ## Navigation is intentionally platformer-friendly: it turns around at walls,
-## patrol ledges, chases the player in range, and reuses HealthComponent.
+## patrols ledges, chases the player on the same platform, and attacks in beats.
 
 @export var patrol_speed: float = 70.0
 @export var chase_speed: float = 130.0
 @export var acceleration: float = 900.0
 @export var gravity: float = 1400.0
 @export var max_fall_speed: float = 520.0
-@export var detection_range: float = 260.0
-@export var lose_interest_range: float = 360.0
-@export var attack_range: float = 34.0
+
+@export_group("AI")
+@export var detection_range: float = 280.0
+@export var lose_interest_range: float = 390.0
+@export var vertical_detection_tolerance: float = 80.0
+@export var attack_range: float = 42.0
+@export var attack_windup_time: float = 0.22
+@export var attack_active_time: float = 0.12
+@export var attack_recovery_time: float = 0.28
+@export var attack_cooldown: float = 0.7
+
+@export_group("Combat")
 @export var contact_damage: int = 1
 
 @onready var state_machine: StateMachine = $StateMachine
 @onready var health_component: HealthComponent = $HealthComponent
-@onready var contact_damage_area: DamageComponent = $ContactDamage
+@onready var attack_hitbox: DamageComponent = $AttackHitbox
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var wall_check: RayCast2D = $WallCheck
 @onready var floor_check: RayCast2D = $FloorCheck
 
 var facing_direction: int = -1
 var target: Player
+var _attack_timer: float = 0.0
+var _attack_cooldown_timer: float = 0.0
+var _has_activated_attack: bool = false
 
 
 func _ready() -> void:
-	contact_damage_area.damage = contact_damage
+	attack_hitbox.damage = contact_damage
+	attack_hitbox.deactivate()
 	health_component.died.connect(_on_died)
 	_find_player()
 
@@ -37,6 +50,7 @@ func _physics_process(delta: float) -> void:
 		_find_player()
 
 	state_machine.physics_tick(delta)
+	_update_timers(delta)
 	_update_state()
 	_apply_gravity(delta)
 
@@ -66,12 +80,17 @@ func _update_state() -> void:
 		state_machine.transition_to(&"patrol")
 		return
 
-	var distance: float = global_position.distance_to(target.global_position)
-	if distance <= attack_range:
-		state_machine.transition_to(&"attack")
-	elif distance <= detection_range:
-		state_machine.transition_to(&"chase")
-	elif state_machine.is_state(&"chase") and distance < lose_interest_range:
+	if state_machine.is_state(&"attack"):
+		return
+
+	var horizontal_distance: float = absf(target.global_position.x - global_position.x)
+	var vertical_distance: float = absf(target.global_position.y - global_position.y)
+	var can_notice_player: bool = horizontal_distance <= detection_range and vertical_distance <= vertical_detection_tolerance
+	var should_keep_chasing: bool = horizontal_distance <= lose_interest_range and vertical_distance <= vertical_detection_tolerance
+
+	if horizontal_distance <= attack_range and vertical_distance <= vertical_detection_tolerance and _attack_cooldown_timer <= 0.0:
+		_start_attack()
+	elif can_notice_player or (state_machine.is_state(&"chase") and should_keep_chasing):
 		state_machine.transition_to(&"chase")
 	else:
 		state_machine.transition_to(&"patrol")
@@ -92,7 +111,7 @@ func _process_chase(delta: float) -> void:
 	if target == null:
 		return
 
-	facing_direction = sign(target.global_position.x - global_position.x)
+	facing_direction = int(sign(target.global_position.x - global_position.x))
 	if facing_direction == 0:
 		facing_direction = 1
 
@@ -104,7 +123,21 @@ func _process_chase(delta: float) -> void:
 
 
 func _process_attack(delta: float) -> void:
+	_attack_timer -= delta
 	velocity.x = move_toward(velocity.x, 0.0, acceleration * delta)
+
+	if _attack_timer <= attack_recovery_time + attack_active_time and not _has_activated_attack:
+		_has_activated_attack = true
+		sprite.modulate = Color(1.0, 0.32, 0.28)
+		attack_hitbox.activate()
+
+	if _attack_timer <= attack_recovery_time:
+		sprite.modulate = Color(1.0, 0.75, 0.55)
+		attack_hitbox.deactivate()
+
+	if _attack_timer <= 0.0:
+		sprite.modulate = Color.WHITE
+		state_machine.transition_to(&"chase" if _can_chase_target() else &"patrol")
 
 
 func _apply_gravity(delta: float) -> void:
@@ -122,11 +155,47 @@ func _flip() -> void:
 
 
 # -----------------------------
+# Attack flow
+# -----------------------------
+func _start_attack() -> void:
+	_face_target()
+	_attack_timer = attack_windup_time + attack_active_time + attack_recovery_time
+	_attack_cooldown_timer = attack_cooldown
+	_has_activated_attack = false
+	sprite.modulate = Color(1.0, 0.92, 0.35)
+	attack_hitbox.deactivate()
+	state_machine.transition_to(&"attack")
+
+
+func _can_chase_target() -> bool:
+	if target == null:
+		return false
+
+	var horizontal_distance: float = absf(target.global_position.x - global_position.x)
+	var vertical_distance: float = absf(target.global_position.y - global_position.y)
+	return horizontal_distance <= lose_interest_range and vertical_distance <= vertical_detection_tolerance
+
+
+func _face_target() -> void:
+	if target == null:
+		return
+
+	facing_direction = int(sign(target.global_position.x - global_position.x))
+	if facing_direction == 0:
+		facing_direction = 1
+	_update_checks_and_visuals()
+
+
+func _update_timers(delta: float) -> void:
+	_attack_cooldown_timer = max(_attack_cooldown_timer - delta, 0.0)
+
+
+# -----------------------------
 # Damage and save data
 # -----------------------------
 func _on_died() -> void:
 	state_machine.transition_to(&"dead")
-	contact_damage_area.deactivate()
+	attack_hitbox.deactivate()
 	collision_layer = 0
 	collision_mask = 1
 	sprite.modulate = Color(0.45, 0.45, 0.45)
@@ -160,5 +229,6 @@ func _find_player() -> void:
 
 func _update_checks_and_visuals() -> void:
 	sprite.flip_h = facing_direction < 0
+	attack_hitbox.position.x = 22.0 * facing_direction
 	wall_check.target_position.x = 18.0 * facing_direction
 	floor_check.position.x = 14.0 * facing_direction

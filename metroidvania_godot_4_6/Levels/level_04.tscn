@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://dys6snneh5wvl"]
+
+[ext_resource type="Script" uid="uid://eif4hic6tboj" path="res://Levels/level_scene.gd" id="1_scene"]
+[ext_resource type="PackedScene" uid="uid://bsr5aw8cw1ng4" path="res://Levels/platform.tscn" id="2_platform"]
+
+[sub_resource type="RectangleShape2D" id="GoalShape"]
+size = Vector2(46, 80)
+
+[node name="Level04" type="Node2D" unique_id=226530778]
+script = ExtResource("1_scene")
+level_number = 4
+level_title = "Dash Gap"
+level_tip = "Press Shift to dash across the long gap."
+
+[node name="World" type="Node2D" parent="." unique_id=650546075]
+
+[node name="Start" parent="World" unique_id=1287612488 instance=ExtResource("2_platform")]
+position = Vector2(230, 360)
+scale = Vector2(7.1875, 0.625)
+
+[node name="TinySafe" parent="World" unique_id=221462248 instance=ExtResource("2_platform")]
+position = Vector2(864, 512)
+scale = Vector2(1.40625, 0.375)
+
+[node name="Landing" parent="World" unique_id=1729487015 instance=ExtResource("2_platform")]
+position = Vector2(1400, 512)
+scale = Vector2(8.125, 0.625)
+
+[node name="GoalMarker" type="Polygon2D" parent="World" unique_id=2004797255]
+position = Vector2(616.00006, 344)
+scale = Vector2(0.6666667, 0.6666667)
+color = Color(0.3326241, 0.7199922, 0.44817877, 0.72156864)
+polygon = PackedVector2Array(0, -24, 24, 0, 0, 24, -24, 0)
+
+[node name="GoalMarker2" type="Polygon2D" parent="World" unique_id=1035784397]
+position = Vector2(720, 328)
+scale = Vector2(0.6666667, 0.6666667)
+color = Color(0, 0.56899947, 0.99094504, 0.72156864)
+polygon = PackedVector2Array(0, -24, 24, 0, 0, 24, -24, 0)
+
+[node name="PlayerSpawn" type="Marker2D" parent="." unique_id=179249003]
+position = Vector2(80, 320)
+
+[node name="EnemySpawns" type="Node2D" parent="." unique_id=785475563]
+
+[node name="Goal" type="Area2D" parent="." unique_id=1691858004]
+position = Vector2(1624, 440)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Goal" unique_id=429471940]
+shape = SubResource("GoalShape")
+
+[node name="GoalMarker" type="Polygon2D" parent="Goal" unique_id=77288617]
+color = Color(0.95, 0.86, 0.25, 0.72)
+polygon = PackedVector2Array(-23, -40, 23, -40, 23, 40, -23, 40)
